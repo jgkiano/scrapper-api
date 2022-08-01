@@ -10,6 +10,10 @@ import { Auth, AuthSchema } from '../schemas/auth.schema';
 import { Customer, CustomerSchema } from '../schemas/customer.schema';
 import { Transaction, TransactionSchema } from '../schemas/transaction.schema';
 import { OrganizationService } from './organization.service';
+import { AuthService } from './auth.service';
+import { CustomerService } from './customer.service';
+import { AccountService } from './account.service';
+import { TransactionService } from './transaction.service';
 
 @Module({
   imports: [
@@ -26,7 +30,19 @@ import { OrganizationService } from './organization.service';
     ]),
   ],
   controllers: [],
-  providers: [OrganizationService],
-  exports: [OrganizationService],
+  providers: [
+    OrganizationService,
+    AuthService,
+    CustomerService,
+    AccountService,
+    TransactionService,
+  ],
+  exports: [
+    OrganizationService,
+    AuthService,
+    CustomerService,
+    AccountService,
+    TransactionService,
+  ],
 })
 export class ServiceModule {}
