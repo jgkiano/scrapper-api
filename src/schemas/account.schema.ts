@@ -19,21 +19,21 @@ export class Account {
   ledgerBalance: number;
 
   @Prop({ required: true })
-  currency: number;
+  currency: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: true,
   })
-  organization: Organization;
+  organizationId: Organization;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Customer',
     required: true,
   })
-  customer: Customer;
+  customerId: Customer;
 }
 
 export type AccountDocument = Account & Document;
