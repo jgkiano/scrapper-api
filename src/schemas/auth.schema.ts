@@ -17,14 +17,14 @@ export class Auth {
     ref: 'Organization',
     required: true,
   })
-  organization: Organization;
+  organizationId: Organization;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Customer',
     required: true,
   })
-  customer: Customer;
+  customerId: Customer;
 }
 
 export type AuthDocument = Auth & Document;
