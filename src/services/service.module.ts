@@ -5,7 +5,15 @@ import {
   Organization,
   OrganizationSchema,
 } from '../schemas/organization.schema';
+import { Account, AccountSchema } from '../schemas/account.schema';
+import { Auth, AuthSchema } from '../schemas/auth.schema';
+import { Customer, CustomerSchema } from '../schemas/customer.schema';
+import { Transaction, TransactionSchema } from '../schemas/transaction.schema';
 import { OrganizationService } from './organization.service';
+import { AuthService } from './auth.service';
+import { CustomerService } from './customer.service';
+import { AccountService } from './account.service';
+import { TransactionService } from './transaction.service';
 
 @Module({
   imports: [
@@ -15,10 +23,26 @@ import { OrganizationService } from './organization.service';
     ),
     MongooseModule.forFeature([
       { name: Organization.name, schema: OrganizationSchema },
+      { name: Account.name, schema: AccountSchema },
+      { name: Auth.name, schema: AuthSchema },
+      { name: Customer.name, schema: CustomerSchema },
+      { name: Transaction.name, schema: TransactionSchema },
     ]),
   ],
   controllers: [],
-  providers: [OrganizationService],
-  exports: [OrganizationService],
+  providers: [
+    OrganizationService,
+    AuthService,
+    CustomerService,
+    AccountService,
+    TransactionService,
+  ],
+  exports: [
+    OrganizationService,
+    AuthService,
+    CustomerService,
+    AccountService,
+    TransactionService,
+  ],
 })
 export class ServiceModule {}

@@ -26,4 +26,10 @@ export class OrganizationService {
     const createdOrganization = new this.organizationModel(organization);
     return createdOrganization.save();
   }
+
+  async fetchOrganization(
+    organizationId: string,
+  ): Promise<OrganizationDocument | null> {
+    return this.organizationModel.findById(organizationId);
+  }
 }
