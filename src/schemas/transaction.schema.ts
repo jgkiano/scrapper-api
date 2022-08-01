@@ -17,7 +17,7 @@ export class Transaction {
   @Prop({ required: true })
   date: Date;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   description: string;
 
   @Prop({ required: true })
@@ -37,14 +37,14 @@ export class Transaction {
     ref: 'Organization',
     required: true,
   })
-  organization: Organization;
+  organizationId: Organization;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Customer',
     required: true,
   })
-  customer: Customer;
+  customerId: Customer;
 }
 
 export type TransactionDocument = Transaction & Document;
