@@ -15,6 +15,7 @@ export class CustomerService {
     lastName: string;
     phoneNumber: string;
     bvn: string;
+    email: string;
   }): Promise<CustomerDocument> {
     const existingCustomer = await this.customerModel.findOne({
       bvn: customer.bvn,

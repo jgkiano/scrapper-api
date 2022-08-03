@@ -24,6 +24,7 @@ export class AppController {
       firstName: 'Julius',
       lastName: 'Kiano',
       phoneNumber: '+254700110590',
+      email: 'hi@kiano.me',
     });
     const auth = await this.authService.createAuth({
       customerId: user.id,
