@@ -14,6 +14,8 @@ import { AuthService } from './auth.service';
 import { CustomerService } from './customer.service';
 import { AccountService } from './account.service';
 import { TransactionService } from './transaction.service';
+import { ScrapperService } from './scrapper.service';
+import { FormatterService } from './formatter.service';
 
 @Module({
   imports: [
@@ -36,6 +38,8 @@ import { TransactionService } from './transaction.service';
     CustomerService,
     AccountService,
     TransactionService,
+    ScrapperService,
+    FormatterService,
   ],
   exports: [
     OrganizationService,
@@ -43,6 +47,8 @@ import { TransactionService } from './transaction.service';
     CustomerService,
     AccountService,
     TransactionService,
+    ScrapperService,
+    FormatterService,
   ],
 })
 export class ServiceModule {}

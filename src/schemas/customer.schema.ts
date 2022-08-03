@@ -14,6 +14,9 @@ export class Customer {
 
   @Prop({ required: true })
   bvn: string;
+
+  @Prop({ required: true })
+  email: string;
 }
 
 export type CustomerDocument = Customer & Document;

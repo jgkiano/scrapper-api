@@ -45,4 +45,14 @@ export class AuthService {
     const createdAuth = new this.authModel(auth);
     return createdAuth.save();
   }
+
+  async fetchAuth(
+    organizationId: string,
+    customerId: string,
+  ): Promise<AuthDocument | null> {
+    return this.authModel.findOne({
+      organizationId: organizationId,
+      customerId: customerId,
+    });
+  }
 }
