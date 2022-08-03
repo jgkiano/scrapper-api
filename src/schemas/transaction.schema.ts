@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Organization } from './organization.schema';
 import { Customer } from './customer.schema';
+import { Account } from './account.schema';
 
 export enum TransactionType {
   debit = 'debit',
@@ -45,6 +46,13 @@ export class Transaction {
     required: true,
   })
   customerId: Customer;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Account',
+    required: true,
+  })
+  accountId: Account;
 }
 
 export type TransactionDocument = Transaction & Document;
