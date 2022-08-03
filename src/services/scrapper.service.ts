@@ -2,7 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import puppeteer from 'puppeteer';
 import { AuthDocument } from '../schemas/auth.schema';
 import { OrganizationDocument } from '../schemas/organization.schema';
+import { ScrappedProfile, ScrappedAccount } from '../types';
 import { AuthService } from './auth.service';
+import { FormatterService } from './formatter.service';
 import { OrganizationService } from './organization.service';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class ScrapperService {
   constructor(
     private readonly authService: AuthService,
     private readonly organizationService: OrganizationService,
+    private readonly formatterService: FormatterService,
   ) {}
 
   private async initialize() {
@@ -49,13 +52,12 @@ export class ScrapperService {
       accounts = await this.scrapeTransactions(accounts);
       await this.scrapeLogout();
       this.browser.close();
-      console.log(profile);
-      console.log(accounts);
-      return {
+      return this.formatterService.format({
         profile,
         accounts,
-      };
+      });
     } catch (error) {
+      // TODO: add error catching - sentry?
       console.error(error);
     }
   }
@@ -88,14 +90,7 @@ export class ScrapperService {
     });
   }
 
-  async scrapeProfile(): Promise<{
-    firstName: string;
-    lastName: string;
-    address: string;
-    bvn: string;
-    phoneNumber: string;
-    email: string;
-  }> {
+  async scrapeProfile(): Promise<ScrappedProfile> {
     await this.page.waitForSelector('main > div > div > p');
     const [address, bvn, phoneNumber, email] = await this.page.$$eval(
       'main > div > div > p',
@@ -113,15 +108,7 @@ export class ScrapperService {
     return { firstName, lastName, address, bvn, phoneNumber, email };
   }
 
-  async scrapeAccounts(): Promise<
-    {
-      accountName: string;
-      balance: string;
-      accountType: string;
-      ledgerBalance: string;
-      accountNumber: string;
-    }[]
-  > {
+  async scrapeAccounts(): Promise<ScrappedAccount[]> {
     await this.page.waitForSelector('section > section');
     const accounts = await this.page.$$eval('section > section', (elements) =>
       elements.map((element) => {
@@ -131,7 +118,7 @@ export class ScrapperService {
           .getAttribute('href')
           .split('-')
           .pop();
-        const [accountType, balance] = element
+        const [currency, availableBalance] = element
           .querySelectorAll('p')[0]
           .textContent.split(' ');
         const [_, ledgerBalance] = element
@@ -139,8 +126,8 @@ export class ScrapperService {
           .textContent.split(' ');
         return {
           accountName,
-          balance,
-          accountType,
+          availableBalance,
+          currency,
           ledgerBalance,
           accountNumber,
         };
@@ -150,14 +137,8 @@ export class ScrapperService {
   }
 
   async scrapeTransactions(
-    accounts: {
-      accountName: string;
-      balance: string;
-      accountType: string;
-      ledgerBalance: string;
-      accountNumber: string;
-    }[],
-  ) {
+    accounts: ScrappedAccount[],
+  ): Promise<ScrappedAccount[]> {
     const selector = `section > section:nth-child(2) > div:nth-child(2) > a`;
     await this.page.waitForSelector(selector);
     let counter = 0;
@@ -191,13 +172,15 @@ export class ScrapperService {
                   row.querySelectorAll('td'),
                   (column) => column.innerText,
                 );
+              const currency = Array.from(amount)[0];
               return {
                 type,
                 date,
                 description,
-                amount,
+                amount: amount.substring(1),
                 beneficiary,
                 sender,
+                currency,
               };
             });
         });
