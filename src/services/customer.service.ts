@@ -3,6 +3,22 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Customer, CustomerDocument } from '../schemas/customer.schema';
 import { Model } from 'mongoose';
 
+export type CreateCustomer = {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  bvn: string;
+  email: string;
+};
+
+export type UpdateCustomer = {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  bvn?: string;
+  email?: string;
+};
+
 @Injectable()
 export class CustomerService {
   constructor(
@@ -10,13 +26,7 @@ export class CustomerService {
     private readonly customerModel: Model<CustomerDocument>,
   ) {}
 
-  async createUser(customer: {
-    firstName: string;
-    lastName: string;
-    phoneNumber: string;
-    bvn: string;
-    email: string;
-  }): Promise<CustomerDocument> {
+  async createCustomer(customer: CreateCustomer): Promise<CustomerDocument> {
     const existingCustomer = await this.customerModel.findOne({
       bvn: customer.bvn,
     });
@@ -29,5 +39,9 @@ export class CustomerService {
 
   async fetchCustomer(customerId: string): Promise<CustomerDocument | null> {
     return this.customerModel.findById(customerId);
+  }
+
+  async updateCustomer(customerId: string, customer: UpdateCustomer) {
+    return this.customerModel.findByIdAndUpdate(customerId, customer);
   }
 }
