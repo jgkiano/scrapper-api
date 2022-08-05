@@ -160,7 +160,7 @@ export class ScrapperService {
         (element) => element.textContent,
       );
       let transactions = [];
-      while (transactions.length < 12) {
+      while (transactions.length !== totalTransactions.length) {
         await this.page.waitForSelector('table tbody tr');
         const result = await this.page.$$eval('table tbody tr', (rows) => {
           return rows
