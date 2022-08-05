@@ -8,12 +8,12 @@ export type ScrappedProfile = {
 };
 
 export type ScrappedTransaction = {
-  type: 'debit' | 'redit';
+  type: 'debit' | 'credit';
   date: Date;
   description?: string;
   amount: string;
-  beneficiary: string;
-  sender: string;
+  beneficiaryAccountNumber: string;
+  senderAccountNumber: string;
   currency: string;
 };
 

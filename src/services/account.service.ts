@@ -9,6 +9,23 @@ import { Model } from 'mongoose';
 import { OrganizationService } from './organization.service';
 import { CustomerService } from './customer.service';
 
+export type CreateAccount = {
+  name: string;
+  number: string;
+  availableBalance: number;
+  ledgerBalance: number;
+  currency: string;
+  organizationId: string;
+  customerId: string;
+};
+
+export type UpdateAccount = {
+  name?: string;
+  availableBalance?: number;
+  ledgerBalance?: number;
+  currency?: string;
+};
+
 @Injectable()
 export class AccountService {
   constructor(
@@ -18,15 +35,7 @@ export class AccountService {
     private readonly customerService: CustomerService,
   ) {}
 
-  async createAccount(account: {
-    name: string;
-    number: string;
-    availableBalance: number;
-    ledgerBalance: number;
-    currency: string;
-    organizationId: string;
-    customerId: string;
-  }): Promise<AccountDocument> {
+  async createAccount(account: CreateAccount): Promise<AccountDocument> {
     const existingOrganization =
       await this.organizationService.fetchOrganization(account.organizationId);
     if (!existingOrganization) {
@@ -58,5 +67,22 @@ export class AccountService {
     organizationId: string;
   }): Promise<AccountDocument | null> {
     return this.accountModel.findOne(query);
+  }
+
+  async updateAccount(
+    customerId: string,
+    organizationId: string,
+    accountNumber: string,
+    account: UpdateAccount,
+  ) {
+    return this.accountModel.findOneAndUpdate(
+      {
+        customerId: customerId,
+        organizationId: organizationId,
+        number: accountNumber,
+      },
+      account,
+      { upsert: true, new: true },
+    );
   }
 }

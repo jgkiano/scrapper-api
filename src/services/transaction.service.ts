@@ -5,10 +5,9 @@ import {
   TransactionDocument,
 } from '../schemas/transaction.schema';
 import { Model } from 'mongoose';
-import { OrganizationService } from './organization.service';
-import { CustomerService } from './customer.service';
+import { AccountService } from './account.service';
 
-type TransactionDto = {
+type CreateTransaction = {
   type: 'credit' | 'debit';
   date: Date;
   description?: string;
@@ -16,8 +15,6 @@ type TransactionDto = {
   currency: string;
   senderAccountNumber: string;
   beneficiaryAccountNumber: string;
-  organizationId: string;
-  customerId: string;
 };
 
 @Injectable()
@@ -25,31 +22,44 @@ export class TransactionService {
   constructor(
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
-    private readonly organizationService: OrganizationService,
-    private readonly customerService: CustomerService,
+    private readonly accountService: AccountService,
   ) {}
 
   async createTransaction(
-    transaction: TransactionDto,
+    accountId: string,
+    transaction: CreateTransaction,
   ): Promise<TransactionDocument> {
-    const existingCustomer = await this.customerService.fetchCustomer(
-      transaction.customerId,
-    );
-    if (!existingCustomer) {
-      throw new NotFoundException('customer does not exist');
+    const existingAccount = await this.accountService.fetchAccount(accountId);
+    if (!existingAccount) {
+      throw new NotFoundException('account does not exist');
     }
-    const existingOrganization =
-      await this.organizationService.fetchOrganization(
-        transaction.organizationId,
-      );
-    if (!existingOrganization) {
-      throw new NotFoundException('customer does not exist');
-    }
-    const createdTransaction = new this.transactionModel(transaction);
+    const createdTransaction = new this.transactionModel({
+      ...transaction,
+      organizationId: existingAccount.organizationId,
+      customerId: existingAccount.customerId,
+      accountId: existingAccount.id,
+    });
     return createdTransaction.save();
   }
 
-  async createBulkTransactions(transactions: TransactionDto[]) {
-    return this.transactionModel.create(transactions);
+  async createBulkTransactions(
+    accountId: string,
+    transactions: CreateTransaction[],
+  ) {
+    const existingAccount = await this.accountService.fetchAccount(accountId);
+    if (!existingAccount) {
+      throw new NotFoundException('account does not exist');
+    }
+    await this.transactionModel.deleteMany({ accountId }); // TODO: look at date of transaction to see if it's a duplicate
+    return this.transactionModel.create(
+      transactions.map((transaction) => {
+        return {
+          ...transaction,
+          organizationId: existingAccount.organizationId,
+          customerId: existingAccount.customerId,
+          accountId: existingAccount.id,
+        };
+      }),
+    );
   }
 }

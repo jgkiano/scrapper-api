@@ -167,19 +167,24 @@ export class ScrapperService {
             .filter((row) => row.children.length)
             .map((row) => {
               const type = row.querySelector('th').innerText;
-              const [date, description, amount, beneficiary, sender] =
-                Array.from(
-                  row.querySelectorAll('td'),
-                  (column) => column.innerText,
-                );
+              const [
+                date,
+                description,
+                amount,
+                beneficiaryAccountNumber,
+                senderAccountNumber,
+              ] = Array.from(
+                row.querySelectorAll('td'),
+                (column) => column.innerText,
+              );
               const currency = Array.from(amount)[0];
               return {
                 type,
                 date,
                 description,
                 amount: amount.substring(1),
-                beneficiary,
-                sender,
+                beneficiaryAccountNumber,
+                senderAccountNumber,
                 currency,
               };
             });
