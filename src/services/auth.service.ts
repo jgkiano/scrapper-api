@@ -45,7 +45,7 @@ export class AuthService {
     }
     const createdAuth = new this.authModel({
       ...auth,
-      password: this.encrypt(auth.password),
+      password: this.encrypt(auth.password), // TODO: pad password with salt?
     });
     return createdAuth.save();
   }
