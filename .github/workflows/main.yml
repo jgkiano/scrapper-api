@@ -31,3 +31,7 @@ jobs:
           gcloud --quiet auth configure-docker --project ${{secrets.GKE_PROJECT_ID}}
           docker push eu.gcr.io/${{secrets.GKE_PROJECT_ID}}/scrapper-api:latest
           docker push eu.gcr.io/${{secrets.GKE_PROJECT_ID}}/scrapper-api:${{ github.sha }}
+
+      - name: Deploy
+        run: |-
+          gcloud run deploy scrapper-api --quiet --regioneurope-west2 --image eu.gcr.io/${{secrets.GKE_PROJECT_ID}}/scrapper-api:${{ github.sha }} --platform "managed" --allow-unauthenticated

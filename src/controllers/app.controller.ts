@@ -19,6 +19,6 @@ export class AppController {
 
   @Get()
   async getHello() {
-    return { message: 'API Live' };
+    return { message: 'API Live 🚀' };
   }
 }
