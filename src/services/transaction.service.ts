@@ -15,6 +15,7 @@ type CreateTransaction = {
   currency: string;
   senderAccountNumber: string;
   beneficiaryAccountNumber: string;
+  txHash: string;
 };
 
 @Injectable()
@@ -50,9 +51,19 @@ export class TransactionService {
     if (!existingAccount) {
       throw new NotFoundException('account does not exist');
     }
-    await this.transactionModel.deleteMany({ accountId }); // TODO: look at date of transaction to see if it's a duplicate
+    const uniqueTransactions = [];
+    for (const transaction of transactions) {
+      const existingTransaction = await this.fetchTransactionByHash(
+        transaction.txHash,
+      );
+      if (!existingTransaction) {
+        uniqueTransactions.push(transaction);
+      } else {
+        console.log('skipping, existing transaction');
+      }
+    }
     return this.transactionModel.create(
-      transactions.map((transaction) => {
+      uniqueTransactions.map((transaction) => {
         return {
           ...transaction,
           organizationId: existingAccount.organizationId,
@@ -61,5 +72,10 @@ export class TransactionService {
         };
       }),
     );
+  }
+
+  async fetchTransactionByHash(txHash: string) {
+    // TODO: speed this up using redis
+    return this.transactionModel.findOne({ txHash: txHash });
   }
 }
