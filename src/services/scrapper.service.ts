@@ -24,10 +24,16 @@ export class ScrapperService {
 
   private async initialize() {
     if (this.browser === null || this.page === null) {
-      this.browser = await puppeteer.launch({
-        headless: true,
-        args: ['--incognito'],
-      });
+      if (process.env.NODE_ENV === 'production') {
+        this.browser = await puppeteer.launch({
+          executablePath: '/usr/bin/google-chrome',
+        });
+      } else {
+        this.browser = await puppeteer.launch({
+          headless: false,
+          args: ['--incognito'],
+        });
+      }
       this.page = await this.browser.newPage();
       this.page.on('dialog', async (dialog) => {
         await dialog.dismiss();
