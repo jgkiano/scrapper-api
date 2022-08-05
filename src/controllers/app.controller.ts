@@ -19,27 +19,53 @@ export class AppController {
 
   @Get()
   async getHello() {
-    // const user = await this.customerService.createCustomer({
-    //   bvn: '12345678912',
-    //   email: 'hi@kiano.me',
-    //   firstName: 'Julius',
-    //   lastName: 'Kiano',
-    //   phoneNumber: '+254700110590',
-    // });
-    // const org = await this.organizationSerivce.createOrganization({
-    //   loginUrl: 'https://google.com',
-    //   name: 'Google',
-    // });
-    // const auth = await this.authService.createAuth({
-    //   customerId: user.id,
-    //   organizationId: org.id,
-    //   password: 'mysecretpassword',
-    //   username: 'Kiano',
-    // });
-    // return auth;
-    return this.authService.fetchAuth(
-      '62ecdffc1344115b07d6fdfe',
-      '62ecdffc1344115b07d6fdfb',
+    const organization = await this.organizationSerivce.createOrganization({
+      loginUrl: 'https://bankof.okra.ng/login',
+      name: 'okra bank',
+    });
+    let customer = await this.customerService.createCustomer({
+      bvn: '12345678912',
+      email: 'hi@kiano.me',
+      firstName: 'Julius',
+      lastName: 'Kiano',
+      phoneNumber: '+254700110590',
+    });
+    await this.authService.createAuth({
+      customerId: customer.id,
+      organizationId: organization.id,
+      password: 'b9fBOwsPExnakcTu',
+      username: 'hi@kiano.me',
+    });
+    const data = await this.scrapperService.scrape(
+      organization.id,
+      customer.id,
     );
+    customer = await this.customerService.updateCustomer(
+      customer.id,
+      data.customer,
+    );
+    const output = {};
+    output['customer'] = customer.toJSON();
+    output['accounts'] = [];
+    for (const account of data.accounts) {
+      const updatedAccount = await this.accountService.updateAccount(
+        customer.id,
+        organization.id,
+        account.accountNumber,
+        account,
+      );
+      const createdTransactions =
+        await this.transactionService.createBulkTransactions(
+          updatedAccount.id,
+          account.transactions,
+        );
+      output['accounts'].push({
+        ...updatedAccount.toJSON(),
+        transactions: createdTransactions.map((transaction) =>
+          transaction.toJSON(),
+        ),
+      });
+    }
+    return output;
   }
 }
