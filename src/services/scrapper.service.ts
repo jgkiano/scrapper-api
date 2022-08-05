@@ -21,7 +21,7 @@ export class ScrapperService {
   private async initialize() {
     if (this.browser === null || this.page === null) {
       this.browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         args: ['--incognito'],
       });
       this.page = await this.browser.newPage();
