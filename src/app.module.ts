@@ -3,6 +3,7 @@ import { AppController } from './controllers/app.controller';
 import { AuthController } from './controllers/auth.controller';
 import { CustomerController } from './controllers/customer.controller';
 import { OrganizationController } from './controllers/organization.controller';
+import { ScrapeController } from './controllers/scrape.controller';
 import { AppService } from './services/app.service';
 import { ServiceModule } from './services/service.module';
 
@@ -13,6 +14,7 @@ import { ServiceModule } from './services/service.module';
     OrganizationController,
     CustomerController,
     AuthController,
+    ScrapeController,
   ],
   providers: [AppService],
 })
