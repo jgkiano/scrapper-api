@@ -23,23 +23,21 @@ export class ScrapperService {
   ) {}
 
   private async initialize() {
-    if (this.browser === null || this.page === null) {
-      if (process.env.NODE_ENV === 'production') {
-        this.browser = await puppeteer.launch({
-          executablePath: '/usr/bin/chromium-browser',
-          args: ['--no-sandbox', '--disable-gpu'],
-        });
-      } else {
-        this.browser = await puppeteer.launch({
-          headless: false,
-          args: ['--incognito'],
-        });
-      }
-      this.page = await this.browser.newPage();
-      this.page.on('dialog', async (dialog) => {
-        await dialog.dismiss();
+    if (process.env.NODE_ENV === 'production') {
+      this.browser = await puppeteer.launch({
+        executablePath: '/usr/bin/chromium-browser',
+        args: ['--no-sandbox', '--disable-gpu'],
+      });
+    } else {
+      this.browser = await puppeteer.launch({
+        headless: false,
+        args: ['--incognito'],
       });
     }
+    this.page = await this.browser.newPage();
+    this.page.on('dialog', async (dialog) => {
+      await dialog.dismiss();
+    });
   }
 
   async scrape(organizationId: string, customerId: string, limit?: number) {
@@ -61,7 +59,7 @@ export class ScrapperService {
       let accounts = await this.scrapeAccounts();
       accounts = await this.scrapeTransactions(accounts, limit);
       await this.scrapeLogout();
-      this.browser.close();
+      await this.browser.close();
       return this.formatterService.format({
         profile,
         accounts,
