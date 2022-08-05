@@ -26,7 +26,8 @@ export class ScrapperService {
     if (this.browser === null || this.page === null) {
       if (process.env.NODE_ENV === 'production') {
         this.browser = await puppeteer.launch({
-          executablePath: '/usr/bin/google-chrome',
+          executablePath: '/usr/bin/chromium-browser',
+          args: ['--no-sandbox', '--disable-gpu'],
         });
       } else {
         this.browser = await puppeteer.launch({
