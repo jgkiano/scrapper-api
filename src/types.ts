@@ -1,3 +1,13 @@
+import {
+  IsAlpha,
+  IsAlphanumeric,
+  IsEmail,
+  IsMongoId,
+  IsNumberString,
+  IsPhoneNumber,
+  IsUrl,
+} from 'class-validator';
+
 export type ScrappedProfile = {
   firstName: string;
   lastName: string;
@@ -25,3 +35,50 @@ export type ScrappedAccount = {
   accountNumber: string;
   transactions?: ScrappedTransaction[];
 };
+
+export class CreateOrganizationDto {
+  @IsUrl()
+  loginUrl: string;
+
+  @IsAlpha()
+  name: string;
+}
+
+export class CreateCustomerDto {
+  @IsNumberString()
+  bvn: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsAlphanumeric()
+  firstName: string;
+
+  @IsAlphanumeric()
+  lastName: string;
+
+  @IsPhoneNumber()
+  phoneNumber: string;
+}
+
+export class CreateAuthDto {
+  @IsMongoId()
+  customerId: string;
+
+  @IsMongoId()
+  organizationId: string;
+
+  @IsAlphanumeric()
+  password: string;
+
+  @IsAlphanumeric()
+  username: string;
+}
+
+export class ScrapeDto {
+  @IsMongoId()
+  customerId: string;
+
+  @IsMongoId()
+  organizationId: string;
+}
