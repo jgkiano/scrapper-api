@@ -34,4 +34,4 @@ jobs:
 
       - name: Deploy
         run: |-
-          gcloud run deploy scrapper-api --quiet --regioneurope-west2 --image eu.gcr.io/${{secrets.GKE_PROJECT_ID}}/scrapper-api:${{ github.sha }} --platform "managed" --allow-unauthenticated
+          gcloud run deploy scrapper-api --quiet --region europe-west2 --image eu.gcr.io/${{secrets.GKE_PROJECT_ID}}/scrapper-api:${{ github.sha }} --platform "managed" --allow-unauthenticated
