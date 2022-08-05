@@ -47,31 +47,36 @@ export class TransactionService {
     accountId: string,
     transactions: CreateTransaction[],
   ) {
-    const existingAccount = await this.accountService.fetchAccount(accountId);
-    if (!existingAccount) {
-      throw new NotFoundException('account does not exist');
-    }
-    const uniqueTransactions = [];
-    for (const transaction of transactions) {
-      const existingTransaction = await this.fetchTransactionByHash(
-        transaction.txHash,
-      );
-      if (!existingTransaction) {
-        uniqueTransactions.push(transaction);
-      } else {
-        console.log('skipping, existing transaction');
+    try {
+      const existingAccount = await this.accountService.fetchAccount(accountId);
+      if (!existingAccount) {
+        throw new NotFoundException('account does not exist');
       }
+      const uniqueTransactions = [];
+      for (const transaction of transactions) {
+        const existingTransaction = await this.fetchTransactionByHash(
+          transaction.txHash,
+        );
+        if (!existingTransaction) {
+          uniqueTransactions.push(transaction);
+        } else {
+          console.log('skipping, existing transaction');
+        }
+      }
+      const result = await this.transactionModel.create(
+        uniqueTransactions.map((transaction) => {
+          return {
+            ...transaction,
+            organizationId: existingAccount.organizationId,
+            customerId: existingAccount.customerId,
+            accountId: existingAccount.id,
+          };
+        }),
+      );
+      return result;
+    } catch (error) {
+      console.error(error);
     }
-    return this.transactionModel.create(
-      uniqueTransactions.map((transaction) => {
-        return {
-          ...transaction,
-          organizationId: existingAccount.organizationId,
-          customerId: existingAccount.customerId,
-          accountId: existingAccount.id,
-        };
-      }),
-    );
   }
 
   async fetchTransactionByHash(txHash: string) {
