@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import puppeteer from 'puppeteer';
 import { AuthDocument } from '../schemas/auth.schema';
 import { OrganizationDocument } from '../schemas/organization.schema';
@@ -19,20 +23,24 @@ export class ScrapperService {
   ) {}
 
   private async initialize() {
-    if (this.browser === null || this.page === null) {
+    if (process.env.NODE_ENV === 'production') {
       this.browser = await puppeteer.launch({
-        headless: true,
+        executablePath: '/usr/bin/chromium-browser',
+        args: ['--no-sandbox', '--disable-gpu'],
+      });
+    } else {
+      this.browser = await puppeteer.launch({
+        headless: false,
         args: ['--incognito'],
       });
-      this.page = await this.browser.newPage();
-      this.page.on('dialog', async (dialog) => {
-        console.log(dialog.message());
-        await dialog.dismiss();
-      });
     }
+    this.page = await this.browser.newPage();
+    this.page.on('dialog', async (dialog) => {
+      await dialog.dismiss();
+    });
   }
 
-  async scrape(organizationId: string, customerId: string) {
+  async scrape(organizationId: string, customerId: string, limit?: number) {
     try {
       const organization = await this.organizationService.fetchOrganization(
         organizationId,
@@ -49,16 +57,17 @@ export class ScrapperService {
       await this.scrapeOtp();
       const profile = await this.scrapeProfile();
       let accounts = await this.scrapeAccounts();
-      accounts = await this.scrapeTransactions(accounts);
+      accounts = await this.scrapeTransactions(accounts, limit);
       await this.scrapeLogout();
-      this.browser.close();
+      await this.browser.close();
       return this.formatterService.format({
         profile,
         accounts,
       });
     } catch (error) {
-      // TODO: add error catching - sentry?
       console.error(error);
+      throw new InternalServerErrorException('unable to finish scrape process');
+      // TODO: add error catching - sentry?
     }
   }
 
@@ -138,6 +147,7 @@ export class ScrapperService {
 
   async scrapeTransactions(
     accounts: ScrappedAccount[],
+    limit: number,
   ): Promise<ScrappedAccount[]> {
     const selector = `section > section:nth-child(2) > div:nth-child(2) > a`;
     await this.page.waitForSelector(selector);
@@ -160,7 +170,13 @@ export class ScrapperService {
         (element) => element.textContent,
       );
       let transactions = [];
-      while (transactions.length !== totalTransactions.length) {
+      const condition = () => {
+        if (limit) {
+          return transactions.length <= limit;
+        }
+        return transactions.length !== totalTransactions.length;
+      };
+      while (condition()) {
         await this.page.waitForSelector('table tbody tr');
         const result = await this.page.$$eval('table tbody tr', (rows) => {
           return rows
@@ -193,6 +209,11 @@ export class ScrapperService {
         await this.page.click(
           'section > div:nth-child(4) > div > button:nth-child(2)',
         );
+      }
+      if (limit) {
+        while (transactions.length > limit) {
+          transactions.pop();
+        }
       }
       accounts[counter]['transactions'] = transactions;
       await this.page.goBack();

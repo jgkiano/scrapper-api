@@ -15,6 +15,7 @@ type CreateTransaction = {
   currency: string;
   senderAccountNumber: string;
   beneficiaryAccountNumber: string;
+  txHash: string;
 };
 
 @Injectable()
@@ -46,20 +47,42 @@ export class TransactionService {
     accountId: string,
     transactions: CreateTransaction[],
   ) {
-    const existingAccount = await this.accountService.fetchAccount(accountId);
-    if (!existingAccount) {
-      throw new NotFoundException('account does not exist');
+    try {
+      const existingAccount = await this.accountService.fetchAccount(accountId);
+      if (!existingAccount) {
+        throw new NotFoundException('account does not exist');
+      }
+      const uniqueTransactions = [];
+      const existingTransactions = [];
+      for (const transaction of transactions) {
+        const existingTransaction = await this.fetchTransactionByHash(
+          transaction.txHash,
+        );
+        if (!existingTransaction) {
+          uniqueTransactions.push(transaction);
+        } else {
+          existingTransactions.push(existingTransaction);
+          console.log('skipping, existing transaction');
+        }
+      }
+      const result = await this.transactionModel.create(
+        uniqueTransactions.map((transaction) => {
+          return {
+            ...transaction,
+            organizationId: existingAccount.organizationId,
+            customerId: existingAccount.customerId,
+            accountId: existingAccount.id,
+          };
+        }),
+      );
+      return [...result, ...existingTransactions];
+    } catch (error) {
+      console.error(error);
     }
-    await this.transactionModel.deleteMany({ accountId }); // TODO: look at date of transaction to see if it's a duplicate
-    return this.transactionModel.create(
-      transactions.map((transaction) => {
-        return {
-          ...transaction,
-          organizationId: existingAccount.organizationId,
-          customerId: existingAccount.customerId,
-          accountId: existingAccount.id,
-        };
-      }),
-    );
+  }
+
+  async fetchTransactionByHash(txHash: string) {
+    // TODO: speed this up using redis
+    return this.transactionModel.findOne({ txHash: txHash });
   }
 }

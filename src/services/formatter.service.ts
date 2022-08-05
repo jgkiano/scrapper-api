@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ScrappedAccount, ScrappedProfile } from '../types';
 import validator from 'validator';
+import * as crypto from 'crypto';
 import { parsePhoneNumber } from 'libphonenumber-js';
 
 @Injectable()
 export class FormatterService {
   format(data: { profile: ScrappedProfile; accounts: ScrappedAccount[] }) {
-    console.log(data.profile.phoneNumber);
     const phoneNumber = parsePhoneNumber(data.profile.phoneNumber, 'NG');
     // validate profile
     if (!validator.isEmail(data.profile.email)) {
@@ -38,6 +38,10 @@ export class FormatterService {
                 ...transaction,
                 date: new Date(transaction.date),
                 amount: Number(transaction.amount),
+                txHash: crypto
+                  .createHash('md5')
+                  .update(JSON.stringify(transaction))
+                  .digest('hex'),
               };
             })
           : [],
