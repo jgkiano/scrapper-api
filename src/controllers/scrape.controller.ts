@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Query } from '@nestjs/common';
 import { ScrapperService } from '../services/scrapper.service';
 import { CustomerService } from '../services/customer.service';
 import { AccountService } from '../services/account.service';
@@ -14,30 +14,39 @@ export class ScrapeController {
     private readonly transactionService: TransactionService,
   ) {}
   @Post()
-  async scrape(@Body() scrapeDto: ScrapeDto): Promise<{ message: string }> {
+  async scrape(@Body() scrapeDto: ScrapeDto, @Query('limit') limit: number) {
     // TODO: best handled by a nestjs queue || bull?
-    this.scrapeService
-      .scrape(scrapeDto.organizationId, scrapeDto.customerId)
-      .then(async (data) => {
-        await this.customerService.updateCustomer(
-          scrapeDto.customerId,
-          data.customer,
+    const data = await this.scrapeService.scrape(
+      scrapeDto.organizationId,
+      scrapeDto.customerId,
+      limit || 5,
+    );
+    const output = {};
+    const customer = await this.customerService.updateCustomer(
+      scrapeDto.customerId,
+      data.customer,
+    );
+    output['customer'] = customer.toJSON();
+    output['accounts'] = [];
+    for (const account of data.accounts) {
+      const updatedAccount = await this.accountService.updateAccount(
+        scrapeDto.customerId,
+        scrapeDto.organizationId,
+        account.accountNumber,
+        account,
+      );
+      const createdTransactions =
+        await this.transactionService.createBulkTransactions(
+          updatedAccount.id,
+          account.transactions,
         );
-        for (const account of data.accounts) {
-          const updatedAccount = await this.accountService.updateAccount(
-            scrapeDto.customerId,
-            scrapeDto.organizationId,
-            account.accountNumber,
-            account,
-          );
-          await this.transactionService.createBulkTransactions(
-            updatedAccount.id,
-            account.transactions,
-          );
-          console.log('records updated..');
-        }
-      })
-      .catch(console.log);
-    return { message: 'ack' };
+      output['accounts'].push({
+        ...updatedAccount.toJSON(),
+        transactions: createdTransactions.map((transaction) =>
+          transaction.toJSON(),
+        ),
+      });
+    }
+    return output;
   }
 }
