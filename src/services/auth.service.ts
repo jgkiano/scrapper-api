@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Auth, AuthDocument } from '../schemas/auth.schema';
 import { Model } from 'mongoose';
@@ -42,7 +43,10 @@ export class AuthService {
     if (existingAuth) {
       throw new ConflictException('auth already exists');
     }
-    const createdAuth = new this.authModel(auth);
+    const createdAuth = new this.authModel({
+      ...auth,
+      password: this.encrypt(auth.password),
+    });
     return createdAuth.save();
   }
 
@@ -50,9 +54,37 @@ export class AuthService {
     organizationId: string,
     customerId: string,
   ): Promise<AuthDocument | null> {
-    return this.authModel.findOne({
+    const result = await this.authModel.findOne({
       organizationId: organizationId,
       customerId: customerId,
     });
+    result.password = this.decrypt(result.password);
+    return result;
+  }
+
+  private encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(process.env.ENCRYPTION_KEY),
+      iv,
+    );
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+  }
+
+  private decrypt(text) {
+    const textParts = text.split(':');
+    const iv = Buffer.from(textParts.shift(), 'hex');
+    const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      Buffer.from(process.env.ENCRYPTION_KEY),
+      iv,
+    );
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
   }
 }

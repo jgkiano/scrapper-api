@@ -19,35 +19,27 @@ export class AppController {
 
   @Get()
   async getHello() {
-    const org = { id: '62ea6a6ddde2e251480fe198' };
-    const user = { id: '62ea6a6edde2e251480fe19b' };
-    const data = await this.scrapperService.scrape(org.id, user.id);
-    const output = {};
-    const updatedCustomer = await this.customerService.updateCustomer(
-      user.id,
-      data.customer,
+    // const user = await this.customerService.createCustomer({
+    //   bvn: '12345678912',
+    //   email: 'hi@kiano.me',
+    //   firstName: 'Julius',
+    //   lastName: 'Kiano',
+    //   phoneNumber: '+254700110590',
+    // });
+    // const org = await this.organizationSerivce.createOrganization({
+    //   loginUrl: 'https://google.com',
+    //   name: 'Google',
+    // });
+    // const auth = await this.authService.createAuth({
+    //   customerId: user.id,
+    //   organizationId: org.id,
+    //   password: 'mysecretpassword',
+    //   username: 'Kiano',
+    // });
+    // return auth;
+    return this.authService.fetchAuth(
+      '62ecdffc1344115b07d6fdfe',
+      '62ecdffc1344115b07d6fdfb',
     );
-    output['customer'] = updatedCustomer.toJSON();
-    output['accounts'] = [];
-    for (const account of data.accounts) {
-      const createdAccount = await this.accountService.updateAccount(
-        updatedCustomer.id,
-        org.id,
-        account.accountNumber,
-        account,
-      );
-      const createdTransactions =
-        await this.transactionService.createBulkTransactions(
-          createdAccount.id,
-          account.transactions,
-        );
-      output['accounts'].push({
-        ...createdAccount.toJSON(),
-        transactions: createdTransactions.map((transaction) =>
-          transaction.toJSON(),
-        ),
-      });
-    }
-    return output;
   }
 }
