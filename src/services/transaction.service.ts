@@ -53,6 +53,7 @@ export class TransactionService {
         throw new NotFoundException('account does not exist');
       }
       const uniqueTransactions = [];
+      const existingTransactions = [];
       for (const transaction of transactions) {
         const existingTransaction = await this.fetchTransactionByHash(
           transaction.txHash,
@@ -60,6 +61,7 @@ export class TransactionService {
         if (!existingTransaction) {
           uniqueTransactions.push(transaction);
         } else {
+          existingTransactions.push(existingTransaction);
           console.log('skipping, existing transaction');
         }
       }
@@ -73,7 +75,7 @@ export class TransactionService {
           };
         }),
       );
-      return result;
+      return [...result, ...existingTransactions];
     } catch (error) {
       console.error(error);
     }
