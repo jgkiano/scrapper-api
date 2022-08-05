@@ -33,6 +33,9 @@ export class Transaction {
   @Prop({ required: true })
   beneficiaryAccountNumber: string;
 
+  @Prop({ required: true })
+  txHash: string;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
