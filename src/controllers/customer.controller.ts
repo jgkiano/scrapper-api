@@ -3,7 +3,7 @@ import { CustomerDocument } from '../schemas/customer.schema';
 import { CustomerService } from '../services/customer.service';
 import { CreateCustomerDto } from '../types';
 
-@Controller('/customer')
+@Controller('/customers')
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
   @Post()

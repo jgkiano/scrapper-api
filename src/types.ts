@@ -5,6 +5,7 @@ import {
   IsMongoId,
   IsNumberString,
   IsPhoneNumber,
+  IsString,
   IsUrl,
 } from 'class-validator';
 
@@ -71,7 +72,7 @@ export class CreateAuthDto {
   @IsAlphanumeric()
   password: string;
 
-  @IsAlphanumeric()
+  @IsString()
   username: string;
 }
 
