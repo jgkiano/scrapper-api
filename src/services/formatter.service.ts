@@ -3,6 +3,7 @@ import { ScrappedAccount, ScrappedProfile } from '../types';
 import validator from 'validator';
 import * as crypto from 'crypto';
 import { parsePhoneNumber } from 'libphonenumber-js';
+import { Document } from 'mongoose';
 
 @Injectable()
 export class FormatterService {
@@ -51,5 +52,16 @@ export class FormatterService {
       customer,
       accounts: formattedAccounts,
     };
+  }
+
+  formatDocument<T>(document: Document): T & { id: string } {
+    const id = document.id;
+    const jsonDoc = document.toJSON();
+    delete jsonDoc['__v'];
+    delete jsonDoc['_id'];
+    return {
+      id,
+      ...jsonDoc,
+    } as any;
   }
 }
