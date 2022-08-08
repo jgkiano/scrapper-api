@@ -26,7 +26,7 @@ export class ScrapeController {
       scrapeDto.customerId,
       data.customer,
     );
-    output['customer'] = customer.toJSON();
+    output['customer'] = customer;
     output['accounts'] = [];
     for (const account of data.accounts) {
       const updatedAccount = await this.accountService.updateAccount(
@@ -41,10 +41,8 @@ export class ScrapeController {
           account.transactions,
         );
       output['accounts'].push({
-        ...updatedAccount.toJSON(),
-        transactions: createdTransactions.map((transaction) =>
-          transaction.toJSON(),
-        ),
+        ...updatedAccount,
+        transactions: createdTransactions,
       });
     }
     return output;

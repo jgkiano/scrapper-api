@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import puppeteer from 'puppeteer';
 import { AuthDocument } from '../schemas/auth.schema';
-import { OrganizationDocument } from '../schemas/organization.schema';
+import { Organization } from '../schemas/organization.schema';
 import { ScrappedProfile, ScrappedAccount } from '../types';
 import { AuthService } from './auth.service';
 import { FormatterService } from './formatter.service';
@@ -72,7 +72,7 @@ export class ScrapperService {
   }
 
   async scrapeLogin(
-    organization: OrganizationDocument,
+    organization: Organization & { id: string },
     auth: AuthDocument,
   ): Promise<void> {
     await this.page.goto(organization.loginUrl, {
