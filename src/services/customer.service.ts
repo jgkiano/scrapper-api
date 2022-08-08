@@ -42,6 +42,8 @@ export class CustomerService {
   }
 
   async updateCustomer(customerId: string, customer: UpdateCustomer) {
-    return this.customerModel.findByIdAndUpdate(customerId, customer);
+    return this.customerModel.findByIdAndUpdate(customerId, customer, {
+      new: true,
+    });
   }
 }
