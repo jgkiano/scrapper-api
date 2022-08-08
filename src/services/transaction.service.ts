@@ -6,6 +6,7 @@ import {
 } from '../schemas/transaction.schema';
 import { Model } from 'mongoose';
 import { AccountService } from './account.service';
+import { FormatterService } from './formatter.service';
 
 type CreateTransaction = {
   type: 'credit' | 'debit';
@@ -24,12 +25,13 @@ export class TransactionService {
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
     private readonly accountService: AccountService,
+    private readonly formatterService: FormatterService,
   ) {}
 
   async createTransaction(
     accountId: string,
     transaction: CreateTransaction,
-  ): Promise<TransactionDocument> {
+  ): Promise<Transaction & { id: string }> {
     const existingAccount = await this.accountService.fetchAccount(accountId);
     if (!existingAccount) {
       throw new NotFoundException('account does not exist');
@@ -40,20 +42,21 @@ export class TransactionService {
       customerId: existingAccount.customerId,
       accountId: existingAccount.id,
     });
-    return createdTransaction.save();
+    const doc = await createdTransaction.save();
+    return this.formatterService.formatDocument<Transaction>(doc);
   }
 
   async createBulkTransactions(
     accountId: string,
     transactions: CreateTransaction[],
-  ) {
+  ): Promise<(Transaction & { id: string })[]> {
     try {
       const existingAccount = await this.accountService.fetchAccount(accountId);
       if (!existingAccount) {
         throw new NotFoundException('account does not exist');
       }
       const uniqueTransactions = [];
-      const existingTransactions = [];
+      const existingTransactions: TransactionDocument[] = [];
       for (const transaction of transactions) {
         const existingTransaction = await this.fetchTransactionByHash(
           transaction.txHash,
@@ -75,7 +78,9 @@ export class TransactionService {
           };
         }),
       );
-      return [...result, ...existingTransactions];
+      return [...result, ...existingTransactions].map((transaction) =>
+        this.formatterService.formatDocument<Transaction>(transaction),
+      );
     } catch (error) {
       console.error(error);
     }

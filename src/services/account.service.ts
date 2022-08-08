@@ -8,6 +8,7 @@ import { Account, AccountDocument } from '../schemas/account.schema';
 import { Model } from 'mongoose';
 import { OrganizationService } from './organization.service';
 import { CustomerService } from './customer.service';
+import { FormatterService } from './formatter.service';
 
 export type CreateAccount = {
   name: string;
@@ -33,9 +34,12 @@ export class AccountService {
     private readonly accountModel: Model<AccountDocument>,
     private readonly organizationService: OrganizationService,
     private readonly customerService: CustomerService,
+    private readonly formatterService: FormatterService,
   ) {}
 
-  async createAccount(account: CreateAccount): Promise<AccountDocument> {
+  async createAccount(
+    account: CreateAccount,
+  ): Promise<Account & { id: string }> {
     const existingOrganization =
       await this.organizationService.fetchOrganization(account.organizationId);
     if (!existingOrganization) {
@@ -55,18 +59,29 @@ export class AccountService {
       throw new ConflictException('account already exists');
     }
     const createdAccount = new this.accountModel(account);
-    return createdAccount.save();
+    const doc = await createdAccount.save();
+    return this.formatterService.formatDocument<Account>(doc);
   }
 
-  async fetchAccount(accountId: string): Promise<AccountDocument | null> {
-    return this.accountModel.findById(accountId);
+  async fetchAccount(
+    accountId: string,
+  ): Promise<(Account & { id: string }) | null> {
+    const account = await this.accountModel.findById(accountId);
+    if (!account) {
+      return null;
+    }
+    return this.formatterService.formatDocument<Account>(account);
   }
 
   async fetch(query: {
     accountNumber: string;
     organizationId: string;
-  }): Promise<AccountDocument | null> {
-    return this.accountModel.findOne(query);
+  }): Promise<(Account & { id: string }) | null> {
+    const account = await this.accountModel.findOne(query);
+    if (!account) {
+      return null;
+    }
+    return this.formatterService.formatDocument<Account>(account);
   }
 
   async updateAccount(
@@ -74,8 +89,8 @@ export class AccountService {
     organizationId: string,
     accountNumber: string,
     account: UpdateAccount,
-  ) {
-    return this.accountModel.findOneAndUpdate(
+  ): Promise<(Account & { id: string }) | null> {
+    const updatedAccount = await this.accountModel.findOneAndUpdate(
       {
         customerId: customerId,
         organizationId: organizationId,
@@ -84,5 +99,9 @@ export class AccountService {
       account,
       { upsert: true, new: true },
     );
+    if (!updatedAccount) {
+      return null;
+    }
+    return this.formatterService.formatDocument<Account>(updatedAccount);
   }
 }
