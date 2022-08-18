@@ -81,8 +81,12 @@ export class ScrapperService {
     await this.page.waitForSelector('#email');
     await this.page.waitForSelector('#password');
     await this.page.waitForSelector('button[type=submit]');
-    await this.page.type('#email', auth.username, { delay: 100 });
-    await this.page.type('#password', auth.password, { delay: 100 });
+    await this.page.type('#email', auth.username, {
+      delay: process.env.NODE_ENV === 'production' ? 0 : 100,
+    });
+    await this.page.type('#password', auth.password, {
+      delay: process.env.NODE_ENV === 'production' ? 0 : 100,
+    });
     await this.page.click('button[type=submit]');
     await this.page.waitForNavigation({
       waitUntil: 'networkidle0',
@@ -92,7 +96,9 @@ export class ScrapperService {
   async scrapeOtp(): Promise<void> {
     await this.page.waitForSelector('#otp');
     await this.page.waitForSelector('button[type=submit]');
-    await this.page.type('#otp', '12345', { delay: 100 }); // TODO: dynamic otps??
+    await this.page.type('#otp', '12345', {
+      delay: process.env.NODE_ENV === 'production' ? 0 : 100,
+    }); // TODO: dynamic otps??
     await this.page.click('button[type=submit]');
     await this.page.waitForNavigation({
       waitUntil: 'networkidle0',
